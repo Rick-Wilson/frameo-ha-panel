@@ -1,0 +1,11 @@
+# Frame backup: contains family photos + the Frameo license/UUID (large, private) —
+# keep it on disk, not in version control.
+backup/
+
+# Build artifacts & the throwaway debug signing key
+toggle-app/build/
+toggle-app/debug.keystore
+*.apk
+
+# macOS
+.DS_Store
