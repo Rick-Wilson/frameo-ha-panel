@@ -77,6 +77,11 @@ public class OverlayService extends Service {
         super.onCreate();
         startForegroundCompat();
         addButton();
+        // Once per start: keep the display awake (never OS-sleep) + sane brightness,
+        // so a Frameo/OS update that resets these self-heals on next launch.
+        io.execute(new Runnable() {
+            @Override public void run() { RootUtil.primeDisplaySettings(); }
+        });
         // Ensure the backlight is on if we're starting during the day.
         if (!computeNight()) setBacklightOffAsync(false);
         handler.post(modeTick);
@@ -165,7 +170,8 @@ public class OverlayService extends Service {
                 WindowManager.LayoutParams.TYPE_PHONE,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                         | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                        | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                 PixelFormat.OPAQUE);
         v.setOnTouchListener(new View.OnTouchListener() {
             @Override public boolean onTouch(View view, MotionEvent e) {
@@ -218,7 +224,8 @@ public class OverlayService extends Service {
                 WindowManager.LayoutParams.TYPE_PHONE,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                         | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                        | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+                        | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                 PixelFormat.TRANSLUCENT);
         lp.gravity = Gravity.TOP | Gravity.START;
         lp.x = dp(12);

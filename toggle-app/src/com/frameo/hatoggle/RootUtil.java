@@ -30,19 +30,26 @@ public final class RootUtil {
     }
 
     /**
-     * Turn the panel backlight fully off (true) or on (false).
-     * When lighting it, also restore a sane brightness + the manual brightness
-     * setting, so a stray brightness of 0 can never leave the panel dark.
+     * Turn the panel backlight fully off (true) or on (false). Fast path: just the
+     * sysfs writes (instant), so wake-on-touch is immediate. Lighting also rewrites
+     * a sane brightness so a stray 0 can't leave the panel dark. The persistent
+     * system brightness setting is handled once at startup (not on every wake).
      */
     public static void setBacklightOff(boolean off) {
         if (off) {
             runAsRoot("echo 4 > " + Config.BACKLIGHT_POWER_NODE);
         } else {
-            runAsRoot("settings put system screen_brightness_mode 0; "
-                    + "settings put system screen_brightness " + Config.DAY_BRIGHTNESS + "; "
-                    + "echo " + Config.DAY_BRIGHTNESS + " > " + Config.BACKLIGHT_NODE + "; "
-                    + "echo 0 > " + Config.BACKLIGHT_POWER_NODE);
+            runAsRoot("echo " + Config.DAY_BRIGHTNESS + " > " + Config.BACKLIGHT_NODE
+                    + "; echo 0 > " + Config.BACKLIGHT_POWER_NODE);
         }
+    }
+
+    /** One-time (per boot) fix of the system brightness setting + keep-awake. Slow. */
+    public static void primeDisplaySettings() {
+        runAsRoot("settings put system screen_brightness_mode 0; "
+                + "settings put system screen_brightness " + Config.DAY_BRIGHTNESS + "; "
+                + "settings put system screen_off_timeout 2147483647; "
+                + "settings put global stay_on_while_plugged_in 7");
     }
 
     private RootUtil() {}
